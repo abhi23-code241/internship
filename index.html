@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Quiz with User Details</title>
+
+<style>
+
+body {
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(120deg, #2980b9, #6dd5fa, #ff9a9e);
+    background-size: 300% 300%;
+    animation: bgMove 8s infinite alternate;
+}
+
+@keyframes bgMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.start-box {
+    background: gold;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    width: 350px;
+}
+
+.start-box input {
+    width: 90%;
+    padding: 8px;
+    margin: 6px 0;
+}
+
+
+.quiz-box {
+    background: gold;
+    padding: 20px;
+    width: 360px;
+    border-radius: 10px;
+    display: none;
+}
+
+.option {
+    background: #eee;
+    padding: 10px;
+    margin: 8px 0;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.option:hover {
+    background: red;
+    color: white;
+}
+
+.selected {
+    background: green;
+    color: white;
+}
+
+.buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    padding: 10px 18px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+
+<div class="start-box" id="startBox">
+    <h2>Welcome to Quiz</h2>
+
+    <input type="text" id="name" placeholder="Enter Name">
+    <input type="text" id="branch" placeholder="Enter Branch">
+    <input type="text" id="regno" placeholder="Enter Registration Number">
+
+    <br><br>
+    <button onclick="startQuiz()">Start Quiz</button>
+</div>
+
+
+<div class="quiz-box" id="quiz">
+    <h3 id="question"></h3>
+    <div id="options"></div>
+    <p>Time Left: <span id="time">10</span></p>
+
+    <div class="buttons">
+        <button onclick="prevQuestion()">Previous</button>
+        <button onclick="nextQuestion()">Next</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    {
+        q: "What does CSS stand for?",
+        options: ["Cascading Style Sheets", "Creative Style System", "Computer Style Sheet"],
+        answer: 0
+    },
+    {
+        q: "Which language is used for logic?",
+        options: ["HTML", "CSS", "JavaScript"],
+        answer: 2
+    },
+    {
+        q: "Which tag is used for JavaScript?",
+        options: ["<js>", "<script>", "<javascript>"],
+        answer: 1
+    },
+    {
+        q: "Which HTML tag is used to create a hyperlink?",
+        options: ["<link>", "<a>", "<href>", "<url>"],
+        answer: 1
+    },
+    {
+        q: "Which CSS property is used to change the background color?",
+        options: ["color", "bgcolor", "background-color", "backgroundImage"],
+        answer: 2
+    },
+    {
+        q: "Which CSS property controls the space inside an element?",
+        options: ["margin", "border", "padding", "spacing"],
+        answer: 2
+    },
+    {
+        q: "Which symbol is used for single-line comments in JavaScript?",
+        options: ["<!-- -->", "/* */", "//", "#"],
+        answer: 2
+    }
+];
+
+let index = 0;
+let score = 0;
+let time = 10;
+let timer;
+let userAnswers = [];
+
+let userName = "", userBranch = "", userReg = "";
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const timeEl = document.getElementById("time");
+const quizBox = document.getElementById("quiz");
+const startBox = document.getElementById("startBox");
+
+function startQuiz() {
+    userName = document.getElementById("name").value.trim();
+    userBranch = document.getElementById("branch").value.trim();
+    userReg = document.getElementById("regno").value.trim();
+
+    const regPattern = /^\d{11}$/;   // only 11 digits
+
+    if (userName === "" || userBranch === "" || userReg === "") {
+        alert("Please fill all details");
+        return;
+    }
+
+    if (!regPattern.test(userReg)) {
+        alert("Registration number must contain exactly 11 digits");
+        return;
+    }
+
+    startBox.style.display = "none";
+    quizBox.style.display = "block";
+    loadQuestion();
+}
+
+function loadQuestion() {
+    clearInterval(timer);
+    time = 10;
+    timeEl.innerText = time;
+
+    questionEl.innerText = questions[index].q;
+    optionsEl.innerHTML = "";
+
+    questions[index].options.forEach((opt, i) => {
+        let div = document.createElement("div");
+        div.className = "option";
+        div.innerText = opt;
+
+        if (userAnswers[index] === i) {
+            div.classList.add("selected");
+        }
+
+        div.onclick = () => selectOption(i);
+        optionsEl.appendChild(div);
+    });
+
+    startTimer();
+}
+
+function selectOption(i) {
+    userAnswers[index] = i;
+    document.querySelectorAll(".option")
+        .forEach(opt => opt.classList.remove("selected"));
+    document.querySelectorAll(".option")[i].classList.add("selected");
+}
+
+function startTimer() {
+    timer = setInterval(() => {
+        time--;
+        timeEl.innerText = time;
+        if (time === 0) nextQuestion();
+    }, 1000);
+}
+
+function nextQuestion() {
+    clearInterval(timer);
+    if (index < questions.length - 1) {
+        index++;
+        loadQuestion();
+    } else {
+        showResult();
+    }
+}
+
+function prevQuestion() {
+    clearInterval(timer);
+    if (index > 0) {
+        index--;
+        loadQuestion();
+    }
+}
+
+function showResult() {
+    score = 0;
+    questions.forEach((q, i) => {
+        if (userAnswers[i] === q.answer) score++;
+    });
+
+    quizBox.innerHTML = `
+        <h2>Quiz Completed 🎉</h2>
+        <p><b>Name:</b> ${userName}</p>
+        <p><b>Branch:</b> ${userBranch}</p>
+        <p><b>Reg No:</b> ${userReg}</p>
+        <p><b>Score:</b> ${score} / ${questions.length}</p>
+        <button onclick="location.reload()">Restart</button>
+    `;
+}
+</script>
+
+</body>
+</html>
